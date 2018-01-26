@@ -1,0 +1,8 @@
+name: "dvsrv001"
+mem: "8"
+cpu: "2"
+net:
+    mgmt:
+        - "abc:def"
+    svc:
+        - "abc:zyd"
