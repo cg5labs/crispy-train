@@ -13,6 +13,7 @@ import json
 import yaml
 import uuid
 import tarfile
+#import xml.etree.ElementTree as ET
 from subprocess import call
 
 
@@ -28,6 +29,7 @@ try:
 except getopt.GetoptError as err:
         print(err) # will print something like "option -a not recognized"
         sys.exit(2)
+
 vm_config_file = None
 vm_package = None
 
@@ -41,6 +43,14 @@ for option, argument in opts:
     elif option in ("-p", "--package"):
         vm_package = argument
         print("package value: %s" % argument)
+
+if vm_config_file == None:
+        usage()
+        sys.exit()
+
+if vm_package == None:
+        usage()
+        sys.exit()
 
 
 # extract metadata.json from Packer build package
