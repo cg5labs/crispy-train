@@ -13,7 +13,7 @@ import json
 import yaml
 import uuid
 import tarfile
-#import xml.etree.ElementTree as ET
+from BeautifulSoup import BeautifulSoup
 from subprocess import call
 
 
@@ -54,7 +54,6 @@ if vm_package == None:
 
 
 # extract metadata.json from Packer build package
-#tar = tarfile.open("box.tgz")
 tar = tarfile.open(vm_package)
 tar.extract("metadata.json")
 tar.close()
@@ -62,9 +61,6 @@ tar.close()
 # sanity-check etadata.json
 with open('metadata.json') as packer_data:
     d = json.load(packer_data)
-    #for key, value in d.iteritems():
-    #    print("key: %s" % key)
-    #    print("val: %s" % value)
 
     if d['provider'] != "libvirt":
         print("ERROR: metadata.json provider != libvirt")
@@ -106,6 +102,8 @@ else:
 
 if dict['mem']:
     print("vMem:%s" % dict['mem'])
+    dict['mem_kb'] = int(dict['mem'])*1024*1024
+    print("vMem_kb:%s kb" % dict['mem_kb'])
 else:
     print("Error: no vMem value found!")
 
@@ -117,3 +115,22 @@ else:
     print("Error: no vNet value found!")
 
 
+
+with open("config.xml") as f:
+        
+        content = f.read()
+
+        y = BeautifulSoup(content)
+        print(y.domain.vcpu.contents[0])
+        print(y.domain.devices.emulator.contents[0])
+        tag = y.domain.vcpu
+        tag.string.replaceWith(dict['cpu'])
+
+        print(y.domain.vcpu.contents[0])
+
+        tag_uuid = y.domain.uuid
+        tag_uuid.string.replaceWith(str(VM_UUID))
+        print(y.domain.uuid.contents[0])
+
+        for tag in y.domain.devices.interface:
+                print(tag)
