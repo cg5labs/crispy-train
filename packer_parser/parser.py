@@ -58,7 +58,7 @@ tar = tarfile.open(vm_package)
 tar.extract("metadata.json")
 tar.close()
 
-# sanity-check etadata.json
+# sanity-check metadata.json
 with open('metadata.json') as packer_data:
     d = json.load(packer_data)
 
@@ -107,14 +107,26 @@ if dict['mem']:
 else:
     print("Error: no vMem value found!")
 
-if dict['net']:
 
-    for key, value in dict['net'].iteritems():
-        print("vNet: %s MAC:%s" % (key , value))
+if dict['disk']:
+    for key, value in dict['disk'].iteritems():
+        #print("name: %s MAC:%s" % (key , value))
+        print("disk name: %s file source:%s" % (key , value['source']))
+        print("disk name: %s disk target:%s" % (key , value['target']))
+        
 else:
-    print("Error: no vNet value found!")
+    print("Error: no disk settings found!")
 
+if dict['net']:
+    for key, value in dict['net'].iteritems():
+        #print("name: %s MAC:%s" % (key , value))
+        print("name: %s net:%s" % (key , value['source_net']))
+        print("name: %s mac:%s" % (key , value['mac']))
+        
+else:
+    print("Error: no vNet settings found!")
 
+print("Done yaml parsing")
 
 with open("config.xml") as f:
         
