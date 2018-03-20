@@ -7,13 +7,18 @@
 # ./parser.py -c config.yml -p box.tgz
 #
 
+# TODO: create program config file to define VM default values
+
 import sys
 import getopt
 import json
 import yaml
 import uuid
 import tarfile
-from BeautifulSoup import BeautifulSoup
+#from BeautifulSoup import BeautifulSoup
+from lxml import etree
+import ElementTree_pretty as ET_pretty
+
 from subprocess import call
 
 
@@ -32,6 +37,28 @@ except getopt.GetoptError as err:
 
 vm_config_file = None
 vm_package = None
+
+#TODO: load config dict from external file
+
+config = { 'vm_files_path': "/opt/vm_images/",
+           'os': {
+               'type': {
+                   'arch': 'x86_64',
+                   'text': 'hvm'
+                   },
+               'boot': {
+                   'dev': 'hd'
+                   },
+               },
+           'devices': {
+               'graphics': {
+                   'type': 'vnc',
+                   'port': '-1',
+                   'keymap': 'en-us'
+                   },
+               'emulator': '/usr/libexec/qemu-kvm'
+               }
+         }
 
 for option, argument in opts:
     if option in ("-h", "--help"):
@@ -55,7 +82,7 @@ if vm_package == None:
 
 # extract metadata.json from Packer build package
 tar = tarfile.open(vm_package)
-tar.extract("metadata.json")
+t#ar.extract("metadata.json")
 tar.close()
 
 # sanity-check metadata.json
@@ -74,15 +101,22 @@ with open('metadata.json') as packer_data:
         print("ERROR: metadata.json vdisk_size missing !")
 
 
-VM_UUID = uuid.uuid4()
+# UUID is created dynamically by "virsh define"
+#VM_UUID = uuid.uuid4()
 
 
-print("UUID: %s" % VM_UUID)
+#print("UUID: %s" % VM_UUID)
 print("vdisk_size: %s" % vdisk_size)
 
 
 # qemu-img convert image.qcow image.raw (defaults to convert to raw)
 #call(["qemu-img", "convert" , "-p", "box_qcow.img", "box.raw"])
+
+domain = etree.Element('domain', type='kvm')
+doc = etree.ElementTree(domain)
+os = etree.SubElement(domain, 'os')
+os_type = etree.SubElement(os, 'type', arch=config['os']['type']['arch']).text=config['os']['type']['text']
+os_boot = etree.SubElement(os, 'boot', dev=config['os']['boot']['dev'])
 
 with open(vm_config_file, 'r') as stream:
     try:
@@ -92,11 +126,13 @@ with open(vm_config_file, 'r') as stream:
 
 if dict['name']:
     print("VM name:%s" % dict['name'])
+    os = etree.SubElement(domain, 'name').text = dict['name']
 else:
     print("Error: no VM name value found!")
 
 if dict['cpu']:
     print("vCPU:%s" % dict['cpu'])
+    vcpu = etree.SubElement(domain, 'vcpu').text = dict['cpu']
 else:
     print("Error: no vCPU value found!")
 
@@ -104,21 +140,30 @@ if dict['mem']:
     print("vMem:%s" % dict['mem'])
     dict['mem_kb'] = int(dict['mem'])*1024*1024
     print("vMem_kb:%s kb" % dict['mem_kb'])
+    memory = etree.SubElement(domain, 'memory').text = str(dict['mem_kb'])
 else:
     print("Error: no vMem value found!")
 
+devices = etree.SubElement(domain, 'devices')
+graphics = etree.SubElement(devices, 'graphics', type=config['devices']['graphics']['type'], port=config['devices']['graphics']['port'], keymap=config['devices']['graphics']['keymap'])
+emulator = etree.SubElement(devices, 'emulator').text=config['devices']['emulator']
 
 if dict['disk']:
     for key, value in dict['disk'].iteritems():
-        #print("name: %s MAC:%s" % (key , value))
-        print("disk name: %s file source:%s" % (key , value['source']))
-        print("disk name: %s disk target:%s" % (key , value['target']))
+        disk_file = etree.SubElement(devices, 'disk', device='disk', type='file')
+        disk_src = etree.SubElement(disk_file, 'source', file=config['vm_files_path'] + value['source'])
+        disk_tgt = etree.SubElement(disk_file, 'target', dev=value['target'])
+        #print("disk name: %s file source:%s" % (key , value['source']))
+        #print("disk name: %s disk target:%s" % (key , value['target']))
         
 else:
     print("Error: no disk settings found!")
 
 if dict['net']:
     for key, value in dict['net'].iteritems():
+        devif = etree.SubElement(devices, 'interface', type='network')
+        devif_src = etree.SubElement(devif, 'source', network=value['source_net'])
+        devif_mac = etree.SubElement(devif, 'mac', address=value['mac'])
         #print("name: %s MAC:%s" % (key , value))
         print("name: %s net:%s" % (key , value['source_net']))
         print("name: %s mac:%s" % (key , value['mac']))
@@ -128,21 +173,9 @@ else:
 
 print("Done yaml parsing")
 
-with open("config.xml") as f:
-        
-        content = f.read()
 
-        y = BeautifulSoup(content)
-        print(y.domain.vcpu.contents[0])
-        print(y.domain.devices.emulator.contents[0])
-        tag = y.domain.vcpu
-        tag.string.replaceWith(dict['cpu'])
-
-        print(y.domain.vcpu.contents[0])
-
-        tag_uuid = y.domain.uuid
-        tag_uuid.string.replaceWith(str(VM_UUID))
-        print(y.domain.uuid.contents[0])
-
-        for tag in y.domain.devices.interface:
-                print(tag)
+print(ET_pretty.prettify(domain))
+outFile3 = open('out3.xml', 'w')
+xml_payload = ET_pretty.prettify(domain)
+outFile3.write(xml_payload)
+#outFile3.close()
