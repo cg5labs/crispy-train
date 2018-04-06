@@ -10,6 +10,7 @@
 # TODO: create program config file to define VM default values
 
 import sys
+import os.path
 import getopt
 import json
 import yaml
@@ -81,9 +82,14 @@ if vm_package == None:
 
 
 # extract metadata.json from Packer build package
-tar = tarfile.open(vm_package)
-tar.extract("metadata.json")
-tar.close()
+if os.path.exists(vm_package):
+    tar = tarfile.open(vm_package)
+    tar.extract("metadata.json")
+    tar.close()
+else:
+    print("ERROR: vm-archive not found: %s" % vm_package )
+    sys.exit()
+
 
 # sanity-check metadata.json
 with open('metadata.json') as packer_data:
