@@ -82,7 +82,7 @@ if vm_package == None:
 
 # extract metadata.json from Packer build package
 tar = tarfile.open(vm_package)
-t#ar.extract("metadata.json")
+tar.extract("metadata.json")
 tar.close()
 
 # sanity-check metadata.json
@@ -178,4 +178,4 @@ print(ET_pretty.prettify(domain))
 outFile3 = open('out3.xml', 'w')
 xml_payload = ET_pretty.prettify(domain)
 outFile3.write(xml_payload)
-#outFile3.close()
+outFile3.close()
