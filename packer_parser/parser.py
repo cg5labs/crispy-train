@@ -39,8 +39,7 @@ except getopt.GetoptError as err:
 vm_config_file = None
 vm_package = None
 
-#TODO: load config dict from external file
-
+# static config vars outside config file
 config = { 'vm_files_path': "/opt/vm_images/",
            'os': {
                'type': {
