@@ -1,0 +1,13 @@
+name: "dvsrv002"
+mem: "8"
+cpu: "2"
+disk:
+    disk1:
+        source: "centos-67.img"
+        target: "hda"
+    disk2:
+        source: "data.img"
+        target: "hdb"
+net:
+    interface1: { source_net: "mgmt-dmz", mac: "42:43:21:21" }
+    interface2: { source_net: "svc-dmz", mac: "42:43:21:20" }
