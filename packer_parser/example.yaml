@@ -3,6 +3,6 @@ mem: "8"
 cpu: "2"
 net:
     mgmt:
-        - "abc:def"
+        - "12:10:f3:4a:ed:11"
     svc:
-        - "abc:zyd"
+        - "12:10:f3:ee:ed:f2"
