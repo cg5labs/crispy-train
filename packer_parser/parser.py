@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 #
 # parser to provision qemu/libvirt VM from packer.io metadata
