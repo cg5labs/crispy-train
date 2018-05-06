@@ -81,7 +81,6 @@ if vm_package == None:
 
 
 # extract metadata.json from Packer build package
-# TODO catch exception if tar.extract fails
 if os.path.exists(vm_package):
     try:
       tar = tarfile.open(vm_package)
@@ -90,6 +89,7 @@ if os.path.exists(vm_package):
     except tarfile.TarError as err:
         print("ERROR: tarfile.open failed!")
         print(err)
+        sys.exit()
 else:
     print("ERROR: vm-archive not found: %s" % vm_package )
     sys.exit()
