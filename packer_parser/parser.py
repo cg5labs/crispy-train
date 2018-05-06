@@ -83,6 +83,7 @@ if vm_package == None:
 # extract metadata.json from Packer build package
 if os.path.exists(vm_package):
     tar = tarfile.open(vm_package)
+    # TODO catch exception if tar.extract fails
     tar.extract("metadata.json")
     tar.close()
 else:
@@ -113,10 +114,27 @@ with open('metadata.json') as packer_data:
 #print("UUID: %s" % VM_UUID)
 print("vdisk_size: %s" % vdisk_size)
 
+# extract box.img from Packer build package
 
-# qemu-img convert image.qcow image.raw (defaults to convert to raw)
-#call(["qemu-img", "convert" , "-p", "box_qcow.img", "box.raw"])
+# Packer qemu/kvm archive structure
+# centos-7.3.libvirt.box.tar.gz 
+# - Vagrantfile 
+# - box.img
+# - metadata.json
 
+# FIXME enable this section for qemu-img convert
+#if os.path.exists(vm_package):
+#    tar = tarfile.open(vm_package)
+#    tar.extract("box.img")
+#    tar.close()
+#    # qemu-img convert image.qcow image.raw (defaults to convert to raw)
+#    call(["qemu-img", "convert" , "-p", "box.img", "box.raw"])
+#else:
+#    print("ERROR: vm-archive not found: %s" % vm_package )
+#    sys.exit()
+
+
+# create the qemu/kvm xml configuration
 domain = etree.Element('domain', type='kvm')
 doc = etree.ElementTree(domain)
 os = etree.SubElement(domain, 'os')
@@ -178,8 +196,10 @@ else:
 
 print("Done yaml parsing")
 
-
+# TODO make this debug-only output
 print(ET_pretty.prettify(domain))
+
+# TODO parameterize/convention this.
 outFile3 = open('out3.xml', 'w')
 xml_payload = ET_pretty.prettify(domain)
 outFile3.write(xml_payload)
