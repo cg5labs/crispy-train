@@ -13,14 +13,21 @@ else
     pip install virtualenv
 fi
 
-#exit 0
-
 # check if virtualenv profile is avaialable
 if [[ -f .env ]]; then
   . .env
 else
-    echo "==> ERROR! Can't activate Python VirtualEnv for ${PROJECT}!"
-    exit 1
+  echo "==> ERROR! Can't activate Python VirtualEnv for ${PROJECT}!"
+  exit 1
 fi
 
-pip install -r requirements.txt
+# check if pip requirements.txt is available, then pip install the modules
+if [[ -f requirements.txt ]]; then 
+  pip install -r requirements.txt
+  RC=$?
+else
+  echo "==> ERROR! Missing requirements.txt in Python VirtualEnv for ${PROJECT}!"
+  exit 2
+fi
+
+exit ${RC}
