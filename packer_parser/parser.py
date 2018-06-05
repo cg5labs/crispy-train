@@ -11,6 +11,7 @@
 
 import sys
 import os.path
+import platform
 import getopt
 import json
 import yaml
@@ -127,16 +128,40 @@ print("vdisk_size: %s" % vdisk_size)
 # - metadata.json
 
 # FIXME enable this section for qemu-img convert
-#if os.path.exists(vm_package):
-#    tar = tarfile.open(vm_package)
-#    tar.extract("box.img")
-#    tar.close()
-#    # qemu-img convert image.qcow image.raw (defaults to convert to raw)
-#    call(["qemu-img", "convert" , "-p", "box.img", "box.raw"])
-#else:
-#    print("ERROR: vm-archive not found: %s" % vm_package )
-#    sys.exit()
+#CurrentOS = platform.linux_distribution()
 
+OSPlatform = platform.system()
+
+if OSPlatform != "Linux":
+    print("INFO: Non-Linux OS detected, exiting: %s" % OSPlatform)
+    #sys.exit()
+    Override = raw_input("Do you want to override? (y/n)")
+    CurrentOS = [ "RHEL","6.8" ]
+
+    if Override != "y":
+        sys.exit()
+else:
+    CurrentOS = platform.linux_distribution()
+
+if (float(CurrentOS[1]) < 7 or Override == "y"):
+
+    print("INFO: Converting qcow image to raw!")
+
+    if os.path.exists(vm_package):
+        tar = tarfile.open(vm_package)
+        tar_contents = tar.getnames()
+        print(tar_contents)
+        if "box.img" in tar_contents:
+            tar.extract("box.img")
+            tar.close()
+            # qemu-img convert image.qcow image.raw (defaults to convert to raw)
+            call(["qemu-img", "convert" , "-p", "box.img", "box.raw"])
+        else:
+            print("WARN: No VM disk image (box.img) found inside archive: %s" % vm_package)
+
+    else:
+        print("ERROR: vm-archive not found: %s" % vm_package )
+        sys.exit()
 
 # create the qemu/kvm xml configuration
 domain = etree.Element('domain', type='kvm')
